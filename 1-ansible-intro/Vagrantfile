@@ -1,0 +1,19 @@
+NODE_IMAGE = "centos/8"
+MAX_NODES = 2
+
+Vagrant.configure("2") do |config|
+  (1..MAX_NODES).each do |id|
+    config.vm.define "db-node-#{id}" , primary: true do |subconfig|
+      subconfig.vm.box = NODE_IMAGE
+      subconfig.vm.hostname = "db-node-#{id}"
+      subconfig.vm.network "private_network", ip: "192.168.50.#{40 + id}"
+
+      subconfig.vm.provision 'shell' do |s|
+        ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+        s.inline = <<-SHELL
+          echo #{ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys
+        SHELL
+      end
+    end
+  end
+end
